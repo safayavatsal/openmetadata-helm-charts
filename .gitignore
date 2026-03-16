@@ -43,3 +43,9 @@ examples/
 values-openshift-deps.yaml
 values-openshift.yaml
 docs/
+
+# Local AI/editor config and notes (not for upstream)
+CLAUDE.md
+.claude/
+.cursor/
+openmemory.md

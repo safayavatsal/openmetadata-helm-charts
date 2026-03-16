@@ -1,11 +1,29 @@
 1. Get the application URL by running these commands:
+{{- $hasExternal := or .Values.ingress.enabled (or .Values.gateway.enabled .Values.route.enabled) }}
+{{- if .Values.gateway.enabled }}
+{{- range .Values.gateway.hostnames }}
+  https://{{ . }}/
+{{- else }}
+  (no hostnames configured — check your Gateway listener for the assigned hostname)
+{{- end }}
+{{- end }}
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}
   {{- range .paths }}
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
   {{- end }}
 {{- end }}
-{{- else if contains "NodePort" .Values.service.type }}
+{{- end }}
+{{- if .Values.route.enabled }}
+{{- if .Values.route.host }}
+  http{{ if .Values.route.tls.enabled }}s{{ end }}://{{ .Values.route.host }}/
+{{- else }}
+  export ROUTE_HOST=$(kubectl get route --namespace {{ .Release.Namespace }} {{ include "OpenMetadata.fullname" . }} -o jsonpath="{.spec.host}")
+  echo "http{{ if .Values.route.tls.enabled }}s{{ end }}://$ROUTE_HOST/"
+{{- end }}
+{{- end }}
+{{- if not $hasExternal }}
+{{- if contains "NodePort" .Values.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "OpenMetadata.fullname" . }})
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
@@ -19,4 +37,5 @@
   export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
   echo "Visit http://127.0.0.1:8585 to use your application"
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8585:$CONTAINER_PORT
+{{- end }}
 {{- end }}

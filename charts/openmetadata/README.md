@@ -270,8 +270,14 @@ helm install openmetadata open-metadata/openmetadata --values <<path-to-values-f
 | fullnameOverride | string | `"openmetadata"` |
 | image.pullPolicy | string | `"Always"` |
 | image.repository | string | `"docker.getcollate.io/openmetadata/server"` |
-| image.tag | string | `1.12.1` |
+| image.tag | string | `1.12.2` |
 | imagePullSecrets | list | `[]` |
+| gateway.enabled | bool | `false` |
+| gateway.annotations | object | `{}` |
+| gateway.labels | object | `{}` |
+| gateway.hostnames | list | `[]` |
+| gateway.parentRefs[0].name | string | `""` |
+| gateway.rules | list | `[]` |
 | ingress.annotations | object | `{}` |
 | ingress.className | string | `""` |
 | ingress.enabled | bool | `false` |
@@ -279,6 +285,13 @@ helm install openmetadata open-metadata/openmetadata --values <<path-to-values-f
 | ingress.hosts[0].paths[0].path | string | `"/"` |
 | ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |
 | ingress.tls | list | `[]` |
+| route.enabled | bool | `false` |
+| route.host | string | `""` |
+| route.annotations | object | `{}` |
+| route.wildcardPolicy | string | `"None"` |
+| route.tls.enabled | bool | `true` |
+| route.tls.termination | string | `"edge"` |
+| route.tls.insecureEdgeTerminationPolicy | string | `"Redirect"` |
 | livenessProbe.initialDelaySeconds | int | `60` |
 | livenessProbe.periodSeconds | int | `30` |
 | livenessProbe.failureThreshold | int | `5` |
@@ -323,6 +336,31 @@ helm install openmetadata open-metadata/openmetadata --values <<path-to-values-f
 | podDisruptionBudget.config.minAvailable | String | `1` |
 | openmetadata.config.deployPipelinesConfig.enabled | bool | `true` |
 | openmetadata.config.reindexConfig.enabled | bool | `true` |
+
+---
+
+## Expose OpenMetadata with Gateway API
+
+The chart supports [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/) as an alternative to classic Ingress. This is useful when your cluster uses a Gateway API-compatible controller (e.g. Cilium, Envoy Gateway, Istio, Traefik).
+
+> **Note:** The Gateway API CRDs must be installed on the cluster independently. The chart does not install them.
+
+Enable by setting `gateway.enabled=true` and providing at least one `parentRefs` entry pointing to your Gateway resource:
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - open-metadata.example.com
+  parentRefs:
+    - name: my-gateway
+      namespace: infra-networking
+  # rules are optional — a default PathPrefix "/" catch-all is used if omitted
+```
+
+The chart renders a `gateway.networking.k8s.io/v1` `HTTPRoute` (falls back to `v1beta1` if `v1` is not available on the cluster).
+
+Gateway API and classic Ingress can be enabled simultaneously if needed.
 
 ---
 

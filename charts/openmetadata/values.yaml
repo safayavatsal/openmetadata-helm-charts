@@ -532,6 +532,49 @@ route:
     #   None     — drop HTTP traffic
     insecureEdgeTerminationPolicy: Redirect
 
+# Gateway API (HTTPRoute) — use instead of, or alongside, ingress when your cluster
+# uses a Gateway API-compatible controller (e.g. Cilium, Envoy Gateway, Istio, Traefik).
+# Requires the Gateway API CRDs to be installed on the cluster independently.
+# See https://gateway-api.sigs.k8s.io/
+gateway:
+  enabled: false
+  annotations: {}
+  labels: {}
+  # List of hostnames this HTTPRoute should match.
+  # Example: ["open-metadata.example.com"]
+  hostnames: []
+  # parentRefs defines which Gateway(s) this HTTPRoute attaches to.
+  # At least one entry with a name is required when gateway.enabled=true.
+  parentRefs:
+    - name: ""
+      # group: gateway.networking.k8s.io
+      # kind: Gateway
+      # namespace: ""
+      # sectionName: ""
+      # port: 443
+  # rules defines the routing rules. If empty, a default catch-all PathPrefix "/" rule
+  # pointing to the OpenMetadata service is rendered automatically.
+  rules: []
+  # Example rules:
+  # rules:
+  #   - matches:
+  #       - path:
+  #           type: PathPrefix
+  #           value: /
+  #     backendRefs:
+  #       - name: openmetadata
+  #         port: 8585
+  #   - matches:
+  #       - path:
+  #           type: PathPrefix
+  #           value: /api
+  #     filters:
+  #       - type: RequestHeaderModifier
+  #         requestHeaderModifier:
+  #           add:
+  #             - name: X-Forwarded-Prefix
+  #               value: /api
+
 extraEnvs: []
 # - name: MY_ENVIRONMENT_VAR
 #   value: the_value_goes_here
